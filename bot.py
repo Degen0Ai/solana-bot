@@ -39,18 +39,18 @@ Pubkey = None
 
 #
 
-LIVE_MODE = os.getenv(‘LIVE_MODE’, ‘false’).lower() == ‘true’
-RPC_URL = os.getenv(‘HELIUS_RPC_URL’, ‘https://api.mainnet-beta.solana.com’)
-WALLET_KEY = os.getenv(‘WALLET_PRIVATE_KEY’, ‘’) # base58 private key
+LIVE_MODE = os.getenv('LIVE_MODE', 'false').lower() == 'true'
+RPC_URL = os.getenv('HELIUS_RPC_URL', ‘https://api.mainnet-beta.solana.com')
+WALLET_KEY = os.getenv('WALLET_PRIVATE_KEY', '') # base58 private key
 
 # WSOL mint (wrapped SOL) used as input token for Jupiter swaps
 
-WSOL_MINT = “So11111111111111111111111111111111111111112”
+WSOL_MINT = 'So11111111111111111111111111111111111111112'
 
 # Jupiter v6 quote + swap API
 
-JUPITER_QUOTE = “https://quote-api.jup.ag/v6/quote”
-JUPITER_SWAP = “https://quote-api.jup.ag/v6/swap”
+JUPITER_QUOTE = 'https://quote-api.jup.ag/v6/quote'
+JUPITER_SWAP = 'https://quote-api.jup.ag/v6/swap'
 
 #
 
