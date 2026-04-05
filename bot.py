@@ -39,9 +39,9 @@ Pubkey = None
 
 #
 
-LIVE_MODE = os.getenv(“LIVE_MODE”, “false”).lower() == “true”
-RPC_URL = os.getenv(“HELIUS_RPC_URL”, “https://api.mainnet-beta.solana.com”)
-WALLET_KEY = os.getenv(“WALLET_PRIVATE_KEY”, “”) # base58 private key
+LIVE_MODE = os.getenv(‘LIVE_MODE’, ‘false’).lower() == ‘true’
+RPC_URL = os.getenv(‘HELIUS_RPC_URL’, ‘https://api.mainnet-beta.solana.com’)
+WALLET_KEY = os.getenv(‘WALLET_PRIVATE_KEY’, ‘’) # base58 private key
 
 # WSOL mint (wrapped SOL) used as input token for Jupiter swaps
 
