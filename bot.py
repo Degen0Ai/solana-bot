@@ -40,7 +40,7 @@ Pubkey = None
 #
 
 LIVE_MODE = os.getenv('LIVE_MODE', 'false').lower() == 'true'
-RPC_URL = os.getenv('HELIUS_RPC_URL', ‘https://api.mainnet-beta.solana.com')
+RPC_URL = os.getenv('HELIUS_RPC_URL', 'https://api.mainnet-beta.solana.com')
 WALLET_KEY = os.getenv('WALLET_PRIVATE_KEY', '') # base58 private key
 
 # WSOL mint (wrapped SOL) used as input token for Jupiter swaps
@@ -60,9 +60,9 @@ JUPITER_SWAP = 'https://quote-api.jup.ag/v6/swap'
 
 CFG = {
 # Capital in LIVE_MODE this is auto-set from your real wallet SOL balance
-“capital”: 1.0, # USD (overridden live by wallet balance)
-“risk_per_trade”: 0.15, # 15% per trade
-“max_open”: 5, # Max concurrent positions
+"capital": 1.0, # USD (overridden live by wallet balance)
+"risk_per_trade": 0.15, # 15% per trade
+"max_open": 5, # Max concurrent positions
 
 ```
 # Entry
@@ -108,12 +108,12 @@ CFG = {
 
 #
 
-log = logging.getLogger(“Sniper”)
+log = logging.getLogger("Sniper")
 log.setLevel(logging.INFO)
-fmt = logging.Formatter(”%(asctime)s.%(msecs)03d %(message)s”, “%H:%M:%S”)
+fmt = logging.Formatter("%(asctime)s.%(msecs)03d %(message)s", "%H:%M:%S")
 sh = logging.StreamHandler(sys.stdout)
 sh.setFormatter(fmt)
-fh = logging.FileHandler(“sim_trades.log”)
+fh = logging.FileHandler("sim_trades.log")
 fh.setFormatter(fmt)
 log.addHandler(sh)
 log.addHandler(fh)
@@ -202,11 +202,11 @@ return int(sol * 1_000_000_000)
 #
 
 class JupiterExecutor:
-“””
+"""
 Executes real token swaps via Jupiter aggregator.
 Only active when LIVE_MODE=true.
 All trades are capped at 15% of wallet balance = micro amounts.
-“””
+"""
 def **init**(self, wallet: WalletManager, session: aiohttp.ClientSession):
 self.wallet = wallet
 self.session = session
@@ -412,7 +412,7 @@ signals: Dict
 peak: float = 0.0
 exit_price: float = 0.0
 exit_time: float = 0.0
-exit_why: str = “”
+exit_why: str = ""
 pnl: float = 0.0
 pnl_pct: float = 0.0
 closed: bool = False
@@ -459,9 +459,9 @@ return self.pnl
 #
 
 class State:
-def **init**(self, wallet: “WalletManager” = None):
+def **init**(self, wallet: "WalletManager" = None):
 # In live mode, capital = real wallet USD balance
-start = wallet.balance_usd() if (wallet and LIVE_MODE and wallet.balance_usd() > 0) else CFG[“capital”]
+start = wallet.balance_usd() if (wallet and LIVE_MODE and wallet.balance_usd() > 0) else CFG["capital"]
 self.capital = start
 self.day_capital = start
 self.open: Dict[str, Trade] = {}
@@ -469,13 +469,13 @@ self.closed: List[Trade] = []
 self.blacklist: set = set()
 self.last_loss_ts: float = 0.0
 self.halted: bool = False
-self.threshold: float = CFG[“min_score”]
+self.threshold: float = CFG["min_score"]
 self.recent_pnl: deque = deque(maxlen=20)
 # Per-token ring buffers for speed
-self.prices: Dict[str, deque] = defaultdict(lambda: deque(maxlen=CFG[“score_history”]))
-self.vols: Dict[str, deque] = defaultdict(lambda: deque(maxlen=CFG[“score_history”]))
-self.liqs: Dict[str, deque] = defaultdict(lambda: deque(maxlen=CFG[“score_history”]))
-self.txs: Dict[str, deque] = defaultdict(lambda: deque(maxlen=CFG[“score_history”]))
+self.prices: Dict[str, deque] = defaultdict(lambda: deque(maxlen=CFG["score_history"]))
+self.vols: Dict[str, deque] = defaultdict(lambda: deque(maxlen=CFG["score_history"]))
+self.liqs: Dict[str, deque] = defaultdict(lambda: deque(maxlen=CFG["score_history"]))
+self.txs: Dict[str, deque] = defaultdict(lambda: deque(maxlen=CFG["score_history"]))
 # Smart wallet registry
 self.smart_wallets: Dict[str, float] = {} # addr -> win_rate
 self.token_wallets: Dict[str, set] = defaultdict(set)
@@ -542,9 +542,9 @@ return {
 def score_safety(snap: Snap) -> float:
 s = 30.0
 # Age: too new = rug risk, sweet spot = bonus, too old = no edge
-if snap.age_min < CFG[“age_sweet_spot_min”]: s -= 12 # instant rug risk
+if snap.age_min < CFG["age_sweet_spot_min"]: s -= 12 # instant rug risk
 elif snap.age_min < 5: s += 2 # very early bonus
-elif snap.age_min > CFG[“age_sweet_spot_max”]: s -= 4 # old, less edge
+elif snap.age_min > CFG["age_sweet_spot_max"]: s -= 4 # old, less edge
 if snap.top10_pct > 80: s -= 10
 elif snap.top10_pct > 60: s -= 5
 elif snap.top10_pct < 40: s += 3 # well distributed = safer
@@ -643,7 +643,7 @@ if overlap:
 avg_wr = statistics.mean(st.smart_wallets[w] for w in overlap)
 s += min(15.0, len(overlap) * avg_wr * 5)
 # Boosted tokens have real $ behind them treat as mild smart money signal
-if getattr(snap, “_boosted”, False):
+if getattr(snap, "_boosted", False):
 s += 5.0
 return min(20.0, s)
 
@@ -653,7 +653,7 @@ mom = score_momentum(snap, st)
 liq = score_liquidity(snap, st)
 smar = score_smart_money(snap, st)
 total = min(100.0, max(0.0, saf + mom + liq + smar))
-return total, {“safety”: saf, “momentum”: mom, “liquidity”: liq, “smart”: smar}
+return total, {"safety": saf, "momentum": mom, "liquidity": liq, "smart": smar}
 
 #
 
@@ -714,7 +714,7 @@ return None
 #
 
 async def fetch_pairs(session: aiohttp.ClientSession) -> List[Snap]:
-“”“Fetch new + trending pairs in parallel, return parsed Snaps.”””
+"""Fetch new + trending pairs in parallel, return parsed Snaps."""
 now_ms = time.time() * 1000
 
 ```
@@ -791,8 +791,8 @@ return snaps
 #
 
 async def scanner_task(session: aiohttp.ClientSession, queue: asyncio.Queue, st: State):
-“”“Continuously fetch market data and push snapshots into queue.”””
-log.info(” Scanner started”)
+"""Continuously fetch market data and push snapshots into queue."""
+log.info(" Scanner started")
 while True:
 t0 = time.time()
 snaps = await fetch_pairs(session)
@@ -810,10 +810,10 @@ sleep = max(0, CFG["scan_interval"] - elapsed)
 await asyncio.sleep(sleep)
 ```
 
-async def decision_task(queue: asyncio.Queue, st: State, executor: “JupiterExecutor” = None):
-“”“Drain queue, score each token, enter if criteria met.”””
-log.info(” Decision engine started”)
-slippage = CFG[“slippage”]
+async def decision_task(queue: asyncio.Queue, st: State, executor: "JupiterExecutor" = None):
+"""Drain queue, score each token, enter if criteria met."""
+log.info(" Decision engine started")
+slippage = CFG["slippage"]
 
 ```
 while True:
@@ -876,10 +876,10 @@ f"${e_price:.8f} pos=${size:.4f} {mode_tag}"
 queue.task_done()
 ```
 
-async def exit_task(queue: asyncio.Queue, st: State, executor: “JupiterExecutor” = None):
-“”“Poll open trades against latest snapshots for exit signals.”””
-log.info(” Exit watcher started”)
-slippage = CFG[“slippage”]
+async def exit_task(queue: asyncio.Queue, st: State, executor: "JupiterExecutor" = None):
+"""Poll open trades against latest snapshots for exit signals."""
+log.info(" Exit watcher started")
+slippage = CFG["slippage"]
 # Build a fast addrsnap cache from the queue without consuming it
 snap_cache: Dict[str, Snap] = {}
 
@@ -938,46 +938,46 @@ f"held={held}s cap=${st.capital:.2f} {emoji}"
 ```
 
 async def status_task(st: State):
-“”“Print periodic performance summary.”””
-await asyncio.sleep(CFG[“status_interval”])
+"""Print periodic performance summary."""
+await asyncio.sleep(CFG["status_interval"])
 while True:
 s = st.stats
 open_syms = [t.symbol for t in st.open.values()]
 if s:
 log.info(
-f” Trades={s[‘n’]} WR={s[‘wr’]*100:.0f}% “
-f”PnL=${s[‘pnl’]:+.2f} AvgWin={s[‘avg_w’]*100:+.1f}% “
-f”AvgLoss={s[‘avg_l’]*100:+.1f}% AvgHold={s[‘avg_h’]:.0f}s “
-f”Threshold={st.threshold:.0f} Open={open_syms or ‘none’} “
-f”Cap=${st.capital:.2f}”
+f" Trades={s['n']} WR={s['wr']*100:.0f}% "
+f"PnL=${s['pnl']:+.2f} AvgWin={s['avg_w']*100:+.1f}% "
+f"AvgLoss={s['avg_l']*100:+.1f}% AvgHold={s['avg_h']:.0f}s "
+f"Threshold={st.threshold:.0f} Open={open_syms or 'none'} "
+f"Cap=${st.capital:.2f}"
 )
 else:
-log.info(f” Scanning… Open={open_syms or ‘none’} Cap=${st.capital:.2f} Threshold={st.threshold:.0f}”)
-await asyncio.sleep(CFG[“status_interval”])
+log.info(f" Scanning… Open={open_syms or 'none'} Cap=${st.capital:.2f} Threshold={st.threshold:.0f}")
+await asyncio.sleep(CFG["status_interval"])
 
 def print_final_report(st: State):
 s = st.stats
-print(”\n” + “”*64)
-print(” FINAL SIMULATION REPORT”)
-print(””*64)
-print(f” Starting Capital : ${CFG[‘capital’]:.2f}”)
-print(f” Final Capital : ${st.capital:.2f}”)
-net = st.capital - CFG[“capital”]
-print(f” Net P&L : ${net:+.2f} ({net/CFG[‘capital’]*100:+.1f}%)”)
+print("\n" + ""*64)
+print(" FINAL SIMULATION REPORT")
+print(""*64)
+print(f" Starting Capital : ${CFG['capital']:.2f}")
+print(f" Final Capital : ${st.capital:.2f}")
+net = st.capital - CFG["capital"]
+print(f" Net P&L : ${net:+.2f} ({net/CFG['capital']*100:+.1f}%)")
 if s:
-print(f” Total Trades : {s[‘n’]} ({s[‘wins’]}W / {s[‘losses’]}L)”)
-print(f” Win Rate : {s[‘wr’]*100:.1f}%”)
-print(f” Avg Win : {s[‘avg_w’]*100:+.1f}%”)
-print(f” Avg Loss : {s[‘avg_l’]*100:+.1f}%”)
-print(f” Avg Hold Time : {s[‘avg_h’]:.0f}s”)
-print(f” Final Threshold : {st.threshold:.1f}”)
-print(f” Blacklisted : {len(st.blacklist)} tokens”)
+print(f" Total Trades : {s['n']} ({s['wins']}W / {s['losses']}L)")
+print(f" Win Rate : {s['wr']*100:.1f}%")
+print(f" Avg Win : {s['avg_w']*100:+.1f}%")
+print(f" Avg Loss : {s['avg_l']*100:+.1f}%")
+print(f" Avg Hold Time : {s['avg_h']:.0f}s")
+print(f" Final Threshold : {st.threshold:.1f}")
+print(f" Blacklisted : {len(st.blacklist)} tokens")
 from collections import Counter
 reasons = Counter(t.exit_why for t in st.closed)
-print(”\n Exit Breakdown:”)
+print("\n Exit Breakdown:")
 for r, n in reasons.most_common():
-print(f” {r:<22} {n:>3}”)
-print(””*64 + “\n”)
+print(f" {r:<22} {n:>3}")
+print(""*64 + "\n")
 
 #
 
@@ -1049,5 +1049,5 @@ pass
 print_final_report(st)
 ```
 
-if **name** == “**main**”:
+if **name** == "**main**":
 asyncio.run(main())
