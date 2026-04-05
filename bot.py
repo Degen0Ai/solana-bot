@@ -1,17 +1,4 @@
-“””
-╔══════════════════════════════════════════════════════════╗
-║ SOLANA MEMECOIN SNIPER — ULTRA-FAST SIMULATION MODE ║
-║ Set LIVE_MODE=true in .env to enable real trading. ║
-╚══════════════════════════════════════════════════════════╝
-
-Speed Architecture:
-
-- All I/O is fully async (aiohttp, asyncio)
-- Scanner, scorer, and exit watcher run as concurrent tasks
-- Token queue fed by parallel WebSocket + REST streams
-- Decisions made in microseconds via pre-computed signal cache
-- No blocking calls anywhere in hot path
-“””
+# Solana Memecoin Sniper Bot - LIVE MODE READY
 
 import asyncio
 import aiohttp
@@ -35,7 +22,7 @@ load_dotenv()
 except ImportError:
 pass # set env vars manually if dotenv not installed
 
-# Solana wallet signing — requires: pip install solders
+# Solana wallet signing requires: pip install solders
 
 try:
 from solders.keypair import Keypair
@@ -46,17 +33,17 @@ SOLDERS_OK = False
 Keypair = None
 Pubkey = None
 
-# ──────────────────────────────────────────────────────────
+#
 
-# LIVE MODE CONFIG — read from .env
+# LIVE MODE CONFIG read from .env
 
-# ──────────────────────────────────────────────────────────
+#
 
 LIVE_MODE = os.getenv(“LIVE_MODE”, “false”).lower() == “true”
 RPC_URL = os.getenv(“HELIUS_RPC_URL”, “https://api.mainnet-beta.solana.com”)
 WALLET_KEY = os.getenv(“WALLET_PRIVATE_KEY”, “”) # base58 private key
 
-# WSOL mint (wrapped SOL) — used as input token for Jupiter swaps
+# WSOL mint (wrapped SOL) used as input token for Jupiter swaps
 
 WSOL_MINT = “So11111111111111111111111111111111111111112”
 
@@ -65,14 +52,14 @@ WSOL_MINT = “So11111111111111111111111111111111111111112”
 JUPITER_QUOTE = “https://quote-api.jup.ag/v6/quote”
 JUPITER_SWAP = “https://quote-api.jup.ag/v6/swap”
 
-# ──────────────────────────────────────────────────────────
+#
 
-# CONFIG — tune these to adjust behavior
+# CONFIG tune these to adjust behavior
 
-# ──────────────────────────────────────────────────────────
+#
 
 CFG = {
-# Capital — in LIVE_MODE this is auto-set from your real wallet SOL balance
+# Capital in LIVE_MODE this is auto-set from your real wallet SOL balance
 “capital”: 1.0, # USD (overridden live by wallet balance)
 “risk_per_trade”: 0.15, # 15% per trade
 “max_open”: 5, # Max concurrent positions
@@ -87,7 +74,7 @@ CFG = {
 "age_sweet_spot_min": 0.5, # 30s min age (avoid instant rugs)
 "age_sweet_spot_max": 60.0, # 60min max for "new launch" bonus
 
-# Exit — tiered take profit (scale out instead of all-at-once)
+# Exit tiered take profit (scale out instead of all-at-once)
 "take_profit_t1": 0.12, # Scale out 40% of position at 12%
 "take_profit_t2": 0.20, # Scale out another 40% at 20%
 "take_profit_t3": 0.35, # Exit remaining 20% at 35%
@@ -115,11 +102,11 @@ CFG = {
 
 }
 
-# ──────────────────────────────────────────────────────────
+#
 
 # LOGGING
 
-# ──────────────────────────────────────────────────────────
+#
 
 log = logging.getLogger(“Sniper”)
 log.setLevel(logging.INFO)
@@ -131,11 +118,11 @@ fh.setFormatter(fmt)
 log.addHandler(sh)
 log.addHandler(fh)
 
-# ──────────────────────────────────────────────────────────
+#
 
-# WALLET MANAGER — loads keypair, tracks real SOL balance
+# WALLET MANAGER loads keypair, tracks real SOL balance
 
-# ──────────────────────────────────────────────────────────
+#
 
 class WalletManager:
 def **init**(self):
@@ -149,11 +136,11 @@ if not LIVE_MODE:
 return
 
 if not SOLDERS_OK:
-print("\n❌ solders not installed. Run: pip install solders")
+print("\n solders not installed. Run: pip install solders")
 sys.exit(1)
 
 if not WALLET_KEY:
-print("\n❌ WALLET_PRIVATE_KEY not set in .env file")
+print("\n WALLET_PRIVATE_KEY not set in .env file")
 sys.exit(1)
 
 try:
@@ -161,9 +148,9 @@ import base58
 raw = base58.b58decode(WALLET_KEY)
 self.keypair = Keypair.from_bytes(raw)
 self.pub = self.keypair.pubkey()
-log.info(f" 🔑 Wallet loaded: {str(self.pub)[:8]}...{str(self.pub)[-4:]}")
+log.info(f" Wallet loaded: {str(self.pub)[:8]}...{str(self.pub)[-4:]}")
 except Exception as e:
-print(f"\n❌ Failed to load wallet: {e}")
+print(f"\n Failed to load wallet: {e}")
 print(" Make sure WALLET_PRIVATE_KEY is the base58 private key from Phantom.")
 sys.exit(1)
 
@@ -181,7 +168,7 @@ async with session.post(RPC_URL, json=payload,
 timeout=aiohttp.ClientTimeout(total=5)) as r:
 data = await r.json()
 lamports = data.get("result", {}).get("value", 0)
-self.balance = lamports / 1_000_000_000 # lamports → SOL
+self.balance = lamports / 1_000_000_000 # lamports SOL
 return self.balance
 except Exception as e:
 log.warning(f"Balance fetch failed: {e}")
@@ -208,11 +195,11 @@ sol = usd / self.sol_price
 return int(sol * 1_000_000_000)
 ```
 
-# ──────────────────────────────────────────────────────────
+#
 
-# JUPITER EXECUTOR — real swap via Jupiter v6 API
+# JUPITER EXECUTOR real swap via Jupiter v6 API
 
-# ──────────────────────────────────────────────────────────
+#
 
 class JupiterExecutor:
 “””
@@ -237,14 +224,14 @@ return "SIM_TX"
 
 lamports = self.wallet.usd_to_lamports(size_usd)
 if lamports < 1000:
-log.warning(f" ⚠️ Position too small: {lamports} lamports")
+log.warning(f" Position too small: {lamports} lamports")
 return None
 
 # Hard safety cap: never spend more than 15% of balance in lamports
 max_lamports = int(self.wallet.balance * 1_000_000_000 * CFG["risk_per_trade"])
 lamports = min(lamports, max_lamports)
 
-# 1. Get quote: SOL → token
+# 1. Get quote: SOL token
 quote = await self._get_quote(WSOL_MINT, snap.addr, lamports, slippage_bps=150)
 if not quote:
 return None
@@ -261,7 +248,7 @@ return None
 # 3. Sign and send
 sig = await self._sign_and_send(tx_b64)
 if sig:
-log.info(f" 🔗 TX: https://solscan.io/tx/{sig}")
+log.info(f" TX: https://solscan.io/tx/{sig}")
 return sig
 
 async def sell(self, snap: "Snap", fraction: float = 1.0) -> Optional[str]:
@@ -280,7 +267,7 @@ sell_amount = int(held * fraction)
 if sell_amount < 100:
 return None
 
-# 1. Get quote: token → SOL
+# 1. Get quote: token SOL
 quote = await self._get_quote(snap.addr, WSOL_MINT, sell_amount, slippage_bps=200)
 if not quote:
 return None
@@ -297,7 +284,7 @@ return None
 
 sig = await self._sign_and_send(tx_b64)
 if sig:
-log.info(f" 🔗 TX: https://solscan.io/tx/{sig}")
+log.info(f" TX: https://solscan.io/tx/{sig}")
 return sig
 
 async def _get_quote(self, input_mint: str, output_mint: str,
@@ -379,11 +366,11 @@ log.warning(f" Sign/send error: {e}")
 return None
 ```
 
-# ──────────────────────────────────────────────────────────
+#
 
 # DATA STRUCTURES
 
-# ──────────────────────────────────────────────────────────
+#
 
 @dataclass
 class Snap:
@@ -447,7 +434,7 @@ self.pnl += pnl_slice
 self.remaining -= fraction
 self.size -= sold_size
 log.info(
-f" 💰 SCALE {self.symbol:<8} {label:<10} "
+f" SCALE {self.symbol:<8} {label:<10} "
 f"+{(eff/self.entry-1)*100:.1f}% realized=${pnl_slice:+.2f} "
 f"rem={self.remaining*100:.0f}%"
 )
@@ -465,11 +452,11 @@ self.closed = True
 return self.pnl
 ```
 
-# ──────────────────────────────────────────────────────────
+#
 
 # SHARED STATE (single object passed everywhere)
 
-# ──────────────────────────────────────────────────────────
+#
 
 class State:
 def **init**(self, wallet: “WalletManager” = None):
@@ -494,7 +481,7 @@ self.smart_wallets: Dict[str, float] = {} # addr -> win_rate
 self.token_wallets: Dict[str, set] = defaultdict(set)
 
 ```
-# ── risk checks (all O(1)) ──────────────────────────
+# risk checks (all O(1))
 def can_enter(self, addr: str) -> Tuple[bool, str]:
 if self.halted: return False, "HALTED"
 if addr in self.blacklist: return False, "BLACKLISTED"
@@ -546,11 +533,11 @@ return {
 }
 ```
 
-# ──────────────────────────────────────────────────────────
+#
 
-# SCORING — pure functions, no I/O, runs in <1ms
+# SCORING pure functions, no I/O, runs in <1ms
 
-# ──────────────────────────────────────────────────────────
+#
 
 def score_safety(snap: Snap) -> float:
 s = 30.0
@@ -596,8 +583,8 @@ vacc = (lv - ev) / ev
 s += min(10, vacc * 60)
 
 # Volume/Price DIVERGENCE detector:
-# Vol surging but price flat = coiling, about to move → bonus
-# Price surging but vol dropping = distribution → penalty
+# Vol surging but price flat = coiling, about to move bonus
+# Price surging but vol dropping = distribution penalty
 if len(prices) >= 4:
 p_chg = (prices[-1] - prices[0]) / (prices[0] or 1)
 if vacc > 0.5 and abs(p_chg) < 0.05:
@@ -605,13 +592,13 @@ s += 4 # coiling setup
 elif p_chg > 0.1 and vacc < -0.3:
 s -= 5 # distribution pattern
 
-# TX spike — rate of change vs 2 periods ago
+# TX spike rate of change vs 2 periods ago
 if len(txs) >= 3 and txs[-2]:
 rate = txs[-1] / (txs[-2] or 1)
 if rate > 2.0: s += min(8, rate * 2.5)
 elif rate > 1.5: s += 3
 
-# Buy pressure — non-linear bonus
+# Buy pressure non-linear bonus
 br = snap.buy_ratio
 if br > 0.75: s += 10
 elif br > 0.65: s += 6
@@ -641,7 +628,7 @@ elif snap.liq >= CFG["min_liquidity"]: s += 2
 if len(liqs) >= 3:
 growth = (liqs[-1] - liqs[0]) / (liqs[0] or 1)
 if growth > 0.1: s += min(5, growth * 25)
-elif growth < -0.2: s -= 10 # pulling → danger
+elif growth < -0.2: s -= 10 # pulling danger
 
 if snap.lp_locked: s += 3
 if snap.mint_ok: s += 2
@@ -655,7 +642,7 @@ overlap = wallets & st.smart_wallets.keys()
 if overlap:
 avg_wr = statistics.mean(st.smart_wallets[w] for w in overlap)
 s += min(15.0, len(overlap) * avg_wr * 5)
-# Boosted tokens have real $ behind them — treat as mild smart money signal
+# Boosted tokens have real $ behind them treat as mild smart money signal
 if getattr(snap, “_boosted”, False):
 s += 5.0
 return min(20.0, s)
@@ -668,11 +655,11 @@ smar = score_smart_money(snap, st)
 total = min(100.0, max(0.0, saf + mom + liq + smar))
 return total, {“safety”: saf, “momentum”: mom, “liquidity”: liq, “smart”: smar}
 
-# ──────────────────────────────────────────────────────────
+#
 
-# EXIT EVALUATION — runs every 0.5s per open trade
+# EXIT EVALUATION runs every 0.5s per open trade
 
-# ──────────────────────────────────────────────────────────
+#
 
 def check_exit(trade: Trade, snap: Snap, st: State) -> Optional[str]:
 p = snap.price
@@ -683,7 +670,7 @@ pnl = (p - trade.entry) / trade.entry
 if p > trade.peak:
 trade.peak = p
 
-# ── Tiered Take Profit (scale out) ──────────────────────
+# Tiered Take Profit (scale out)
 # These return special tags handled in exit_task for partial exits
 if not trade.t1_hit and pnl >= CFG["take_profit_t1"]:
 return "TP_T1" # Scale out 40% at 12%
@@ -692,7 +679,7 @@ return "TP_T2" # Scale out another 40% at 20%
 if trade.t2_hit and pnl >= CFG["take_profit_t3"]:
 return "TP_T3" # Exit remaining 20% at 35%
 
-# ── Full Exits ───────────────────────────────────────────
+# Full Exits
 if pnl <= -CFG["stop_loss"]: return "STOP_LOSS"
 
 # Trailing stop (only after 5% gain)
@@ -720,11 +707,11 @@ return "VOL_COLLAPSE"
 return None
 ```
 
-# ──────────────────────────────────────────────────────────
+#
 
 # DATA FETCHER (async, parallel)
 
-# ──────────────────────────────────────────────────────────
+#
 
 async def fetch_pairs(session: aiohttp.ClientSession) -> List[Snap]:
 “”“Fetch new + trending pairs in parallel, return parsed Snaps.”””
@@ -797,15 +784,15 @@ continue
 return snaps
 ```
 
-# ──────────────────────────────────────────────────────────
+#
 
 # CORE TASKS
 
-# ──────────────────────────────────────────────────────────
+#
 
 async def scanner_task(session: aiohttp.ClientSession, queue: asyncio.Queue, st: State):
 “”“Continuously fetch market data and push snapshots into queue.”””
-log.info(“🔍 Scanner started”)
+log.info(” Scanner started”)
 while True:
 t0 = time.time()
 snaps = await fetch_pairs(session)
@@ -825,7 +812,7 @@ await asyncio.sleep(sleep)
 
 async def decision_task(queue: asyncio.Queue, st: State, executor: “JupiterExecutor” = None):
 “”“Drain queue, score each token, enter if criteria met.”””
-log.info(“⚡ Decision engine started”)
+log.info(” Decision engine started”)
 slippage = CFG[“slippage”]
 
 ```
@@ -861,13 +848,13 @@ continue
 size = st.capital * CFG["risk_per_trade"]
 e_price= snap.price * (1 + slippage)
 
-# ── LIVE: execute real buy via Jupiter ──────────────
+# LIVE: execute real buy via Jupiter
 tx_sig = None
 if LIVE_MODE and executor:
-log.info(f" ⚡ Sending BUY for {snap.symbol} ${size:.4f}...")
+log.info(f" Sending BUY for {snap.symbol} ${size:.4f}...")
 tx_sig = await executor.buy(snap, size)
 if not tx_sig:
-log.warning(f" ⚠️ Buy failed for {snap.symbol} — skipping")
+log.warning(f" Buy failed for {snap.symbol} skipping")
 queue.task_done()
 continue
 
@@ -881,7 +868,7 @@ st.capital -= size
 
 mode_tag = f"[LIVE tx={tx_sig[:8]}]" if tx_sig and tx_sig != "SIM_TX" else "[SIM]"
 log.info(
-f" 📥 ENTER {snap.symbol:<8} score={score:.0f} "
+f" ENTER {snap.symbol:<8} score={score:.0f} "
 f"saf={signals['safety']:.0f} mom={signals['momentum']:.0f} "
 f"liq={signals['liquidity']:.0f} smt={signals['smart']:.0f} "
 f"${e_price:.8f} pos=${size:.4f} {mode_tag}"
@@ -891,9 +878,9 @@ queue.task_done()
 
 async def exit_task(queue: asyncio.Queue, st: State, executor: “JupiterExecutor” = None):
 “”“Poll open trades against latest snapshots for exit signals.”””
-log.info(“🛡 Exit watcher started”)
+log.info(” Exit watcher started”)
 slippage = CFG[“slippage”]
-# Build a fast addr→snap cache from the queue without consuming it
+# Build a fast addrsnap cache from the queue without consuming it
 snap_cache: Dict[str, Snap] = {}
 
 ```
@@ -921,7 +908,7 @@ continue
 
 why = check_exit(trade, snap, st)
 if why:
-# ── Partial exits (tiered TP) ──────────────
+# Partial exits (tiered TP)
 if why == "TP_T1":
 if LIVE_MODE and executor:
 await executor.sell(snap, fraction=0.40)
@@ -934,17 +921,17 @@ await executor.sell(snap, fraction=0.40)
 trade.partial_exit(snap.price, 0.40, slippage, "T2@20%")
 trade.t2_hit = True
 continue
-# ── Full close ──────────────────────────────
+# Full close
 if LIVE_MODE and executor:
 await executor.sell(snap, fraction=1.0)
 pnl = trade.close(snap.price, why, slippage)
 del st.open[addr]
 st.record_close(trade)
 st.adapt_threshold()
-emoji = "✅" if pnl >= 0 else "❌"
+emoji = "" if pnl >= 0 else ""
 held = int(trade.exit_time - trade.t_open)
 log.info(
-f" 📤 EXIT {trade.symbol:<8} {why:<18} "
+f" EXIT {trade.symbol:<8} {why:<18} "
 f"total={trade.pnl_pct*100:+.1f}% ${pnl:+.2f} "
 f"held={held}s cap=${st.capital:.2f} {emoji}"
 )
@@ -958,21 +945,21 @@ s = st.stats
 open_syms = [t.symbol for t in st.open.values()]
 if s:
 log.info(
-f” 📊 Trades={s[‘n’]} WR={s[‘wr’]*100:.0f}% “
+f” Trades={s[‘n’]} WR={s[‘wr’]*100:.0f}% “
 f”PnL=${s[‘pnl’]:+.2f} AvgWin={s[‘avg_w’]*100:+.1f}% “
 f”AvgLoss={s[‘avg_l’]*100:+.1f}% AvgHold={s[‘avg_h’]:.0f}s “
 f”Threshold={st.threshold:.0f} Open={open_syms or ‘none’} “
 f”Cap=${st.capital:.2f}”
 )
 else:
-log.info(f” 📊 Scanning… Open={open_syms or ‘none’} Cap=${st.capital:.2f} Threshold={st.threshold:.0f}”)
+log.info(f” Scanning… Open={open_syms or ‘none’} Cap=${st.capital:.2f} Threshold={st.threshold:.0f}”)
 await asyncio.sleep(CFG[“status_interval”])
 
 def print_final_report(st: State):
 s = st.stats
-print(”\n” + “═”*64)
-print(” 📊 FINAL SIMULATION REPORT”)
-print(“═”*64)
+print(”\n” + “”*64)
+print(” FINAL SIMULATION REPORT”)
+print(””*64)
 print(f” Starting Capital : ${CFG[‘capital’]:.2f}”)
 print(f” Final Capital : ${st.capital:.2f}”)
 net = st.capital - CFG[“capital”]
@@ -990,49 +977,49 @@ reasons = Counter(t.exit_why for t in st.closed)
 print(”\n Exit Breakdown:”)
 for r, n in reasons.most_common():
 print(f” {r:<22} {n:>3}”)
-print(“═”*64 + “\n”)
+print(””*64 + “\n”)
 
-# ──────────────────────────────────────────────────────────
+#
 
 # ENTRYPOINT
 
-# ──────────────────────────────────────────────────────────
+#
 
 async def main():
 connector = aiohttp.TCPConnector(limit=20, ttl_dns_cache=300)
 async with aiohttp.ClientSession(connector=connector) as session:
 
 ```
-# ── Boot wallet ─────────────────────────────────────
+# Boot wallet
 wallet = WalletManager()
 executor = None
 
 if LIVE_MODE:
 sol_price = await wallet.fetch_sol_price(session)
 sol_bal = await wallet.fetch_sol_balance(session)
-print("╔══════════════════════════════════════════════════════════╗")
-print("║ SOLANA MEMECOIN SNIPER — ⚡ LIVE MODE ⚡ ║")
-print("║ Real transactions on Solana mainnet ║")
-print("╚══════════════════════════════════════════════════════════╝")
+print("")
+print(" SOLANA MEMECOIN SNIPER LIVE MODE ")
+print(" Real transactions on Solana mainnet ")
+print("")
 print(f" Wallet : {str(wallet.pub)[:8]}...{str(wallet.pub)[-4:]}")
 print(f" SOL Balance : {sol_bal:.6f} SOL (${wallet.balance_usd():.4f})")
 print(f" SOL Price : ${sol_price:.2f}")
 if sol_bal < 0.005:
-print("\n⚠️ WARNING: Very low SOL balance. You need at least 0.005 SOL for gas.")
+print("\n WARNING: Very low SOL balance. You need at least 0.005 SOL for gas.")
 executor = JupiterExecutor(wallet, session)
 else:
-print("╔══════════════════════════════════════════════════════════╗")
-print("║ SOLANA MEMECOIN SNIPER — SIMULATION MODE ║")
-print("║ Paper trading only. Set LIVE_MODE=true to go live. ║")
-print("╚══════════════════════════════════════════════════════════╝")
+print("")
+print(" SOLANA MEMECOIN SNIPER SIMULATION MODE ")
+print(" Paper trading only. Set LIVE_MODE=true to go live. ")
+print("")
 
 st = State(wallet)
 print(f" Capital : ${st.capital:.4f}")
 print(f" Risk/Trade : {CFG['risk_per_trade']*100:.0f}% (${st.capital*CFG['risk_per_trade']:.4f} per trade)")
-print(f" TP Tiers : T1={CFG['take_profit_t1']*100:.0f}%(40%) → T2={CFG['take_profit_t2']*100:.0f}%(40%) → T3={CFG['take_profit_t3']*100:.0f}%(20%)")
+print(f" TP Tiers : T1={CFG['take_profit_t1']*100:.0f}%(40%) T2={CFG['take_profit_t2']*100:.0f}%(40%) T3={CFG['take_profit_t3']*100:.0f}%(20%)")
 print(f" SL / Trail : {CFG['stop_loss']*100:.0f}% / {CFG['trailing_stop']*100:.0f}% from peak")
 print(f" Scan speed : every {CFG['scan_interval']}s (3 sources parallel)")
-print(f" Exit check : every {CFG['exit_check_interval']}s (4×/sec)")
+print(f" Exit check : every {CFG['exit_check_interval']}s (4/sec)")
 print(f" Timeout : {CFG['timeout_secs']}s flat")
 print(f" Min score : {CFG['min_score']} (adaptive)")
 print()
@@ -1048,7 +1035,7 @@ asyncio.create_task(status_task(st), name="status"),
 ]
 
 def _shutdown(sig, frame):
-log.info("\n⛔ Shutting down...")
+log.info("\n Shutting down...")
 for t in tasks: t.cancel()
 
 signal.signal(signal.SIGINT, _shutdown)
