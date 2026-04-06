@@ -30,67 +30,67 @@ Keypair = None
 Pubkey = None
 
 LIVE_MODE = os.getenv('LIVE_MODE', 'false').lower() == 'true'
-RPC_URL = os.getenv(‘HELIUS_RPC_URL’, ‘https://api.mainnet-beta.solana.com’)
-WALLET_KEY = os.getenv(‘WALLET_PRIVATE_KEY’, ‘’)
-GROQ_API_KEY = os.getenv(‘GROQ_API_KEY’, ‘’)
-GROQ_URL = ‘https://api.groq.com/openai/v1/chat/completions’
-GROQ_MODEL = ‘llama-3.3-70b-versatile’
-WSOL_MINT = ‘So11111111111111111111111111111111111111112’
-JUPITER_QUOTE= ‘https://quote-api.jup.ag/v6/quote’
-JUPITER_SWAP = ‘https://quote-api.jup.ag/v6/swap’
-JITO_URL = ‘https://mainnet.block-engine.jito.wtf/api/v1/transactions’
-PUMP_PROGRAM = ‘6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P’
-HELIUS_WS = RPC_URL.replace(‘https://’, ‘wss://’).replace(‘http://’, ‘ws://’)
+RPC_URL = os.getenv('HELIUS_RPC_URL', 'https://api.mainnet-beta.solana.com')
+WALLET_KEY = os.getenv('WALLET_PRIVATE_KEY', '')
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
+GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
+GROQ_MODEL = 'llama-3.3-70b-versatile'
+WSOL_MINT = 'So11111111111111111111111111111111111111112'
+JUPITER_QUOTE= 'https://quote-api.jup.ag/v6/quote'
+JUPITER_SWAP = 'https://quote-api.jup.ag/v6/swap'
+JITO_URL = 'https://mainnet.block-engine.jito.wtf/api/v1/transactions'
+PUMP_PROGRAM = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'
+HELIUS_WS = RPC_URL.replace('https://', 'wss://').replace('http://', 'ws://')
 
 CFG = {
-‘capital’: 1.0,
-‘risk_per_trade’: 0.20,
-‘max_open’: 5,
-‘min_score’: 15,
-‘min_liquidity’: 500,
-‘min_volume_5m’: 0,
-‘min_tx_5m’: 1,
-‘min_buy_ratio’: 0.20,
-‘age_sweet_spot_min’:0.05,
-‘age_sweet_spot_max’:120.0,
-‘take_profit_t1’: 0.20,
-‘take_profit_t2’: 0.35,
-‘take_profit_t3’: 0.50,
-‘stop_loss’: 0.22,
-‘trailing_stop’: 0.12,
-‘timeout_secs’: 45,
-‘min_move_pct’: 0.03,
-‘daily_loss_limit’: 0.05,
-‘cooldown_secs’: 3,
-‘slippage’: 0.015,
-‘scan_interval’: 2.0,
-‘exit_check_interval’:0.25,
-‘score_history’: 15,
-‘status_interval’: 2,
-‘liq_pull_pct’: -0.05,
-‘sell_pressure_max’: 0.40,
-‘smart_wallet_min_wr’:0.65,
+'capital': 1.0,
+'risk_per_trade': 0.20,
+'max_open': 5,
+'min_score': 15,
+'min_liquidity': 500,
+'min_volume_5m': 0,
+'min_tx_5m': 1,
+'min_buy_ratio': 0.20,
+'age_sweet_spot_min':0.05,
+'age_sweet_spot_max':120.0,
+'take_profit_t1': 0.20,
+'take_profit_t2': 0.35,
+'take_profit_t3': 0.50,
+'stop_loss': 0.22,
+'trailing_stop': 0.12,
+'timeout_secs': 45,
+'min_move_pct': 0.03,
+'daily_loss_limit': 0.05,
+'cooldown_secs': 3,
+'slippage': 0.015,
+'scan_interval': 2.0,
+'exit_check_interval':0.25,
+'score_history': 15,
+'status_interval': 2,
+'liq_pull_pct': -0.05,
+'sell_pressure_max': 0.40,
+'smart_wallet_min_wr':0.65,
 }
 
-log = logging.getLogger(‘Sniper’)
+log = logging.getLogger('Sniper')
 log.setLevel(logging.INFO)
-fmt = logging.Formatter(’%(asctime)s.%(msecs)03d %(message)s’, ‘%H:%M:%S’)
+fmt = logging.Formatter('%(asctime)s.%(msecs)03d %(message)s', '%H:%M:%S')
 sh = logging.StreamHandler(sys.stdout)
 sh.setFormatter(fmt)
-fh = logging.FileHandler(‘sim_trades.log’)
+fh = logging.FileHandler('sim_trades.log')
 fh.setFormatter(fmt)
 log.addHandler(sh)
 log.addHandler(fh)
 
-NARRATIVE_KEYWORDS = [‘ai’,‘agent’,‘gpt’,‘trump’,‘elon’,‘doge’,‘pepe’,‘wojak’,
-‘moon’,‘pump’,‘sol’,‘cat’,‘dog’,‘inu’,‘baby’,‘meta’,‘btc’,‘meme’,‘chad’,‘sigma’]
+NARRATIVE_KEYWORDS = ['ai','agent','gpt','trump','elon','doge','pepe','wojak',
+'moon','pump','sol','cat','dog','inu','baby','meta','btc','meme','chad','sigma']
 
-def has_narrative(symbol, name=’’):
-text = (symbol + ’ ’ + name).lower()
+def has_narrative(symbol, name=''):
+text = (symbol + ' ' + name).lower()
 for kw in NARRATIVE_KEYWORDS:
 if kw in text:
 return True, kw
-return False, ‘’
+return False, ''
 
 @dataclass
 class Snap:
@@ -110,7 +110,7 @@ top10_pct: float = 50.0
 ts: float = field(default_factory=time.time)
 _boosted: bool = False
 _narrative: bool = False
-_narrative_kw: str = ‘’
+_narrative_kw: str = ''
 
 ```
 @property
@@ -135,7 +135,7 @@ signals: Dict
 peak: float = 0.0
 exit_price: float = 0.0
 exit_time: float = 0.0
-exit_why: str = ‘’
+exit_why: str = ''
 pnl: float = 0.0
 pnl_pct: float = 0.0
 closed: bool = False
@@ -252,7 +252,7 @@ return int((usd / self.sol_price) * 1e9)
 
 class State:
 def **init**(self, wallet=None):
-start = wallet.balance_usd() if (wallet and LIVE_MODE and wallet.balance_usd() > 0) else CFG[‘capital’]
+start = wallet.balance_usd() if (wallet and LIVE_MODE and wallet.balance_usd() > 0) else CFG['capital']
 self.capital = start
 self.day_capital = start
 self.open: Dict[str, Trade] = {}
@@ -260,25 +260,25 @@ self.closed: List[Trade] = []
 self.blacklist: set = set()
 self.last_loss_ts: float = 0.0
 self.halted: bool = False
-self.threshold: float = CFG[‘min_score’]
+self.threshold: float = CFG['min_score']
 self.recent_pnl: deque = deque(maxlen=20)
-self.prices: Dict[str,deque] = defaultdict(lambda: deque(maxlen=CFG[‘score_history’]))
-self.vols: Dict[str,deque] = defaultdict(lambda: deque(maxlen=CFG[‘score_history’]))
-self.liqs: Dict[str,deque] = defaultdict(lambda: deque(maxlen=CFG[‘score_history’]))
-self.txs: Dict[str,deque] = defaultdict(lambda: deque(maxlen=CFG[‘score_history’]))
+self.prices: Dict[str,deque] = defaultdict(lambda: deque(maxlen=CFG['score_history']))
+self.vols: Dict[str,deque] = defaultdict(lambda: deque(maxlen=CFG['score_history']))
+self.liqs: Dict[str,deque] = defaultdict(lambda: deque(maxlen=CFG['score_history']))
+self.txs: Dict[str,deque] = defaultdict(lambda: deque(maxlen=CFG['score_history']))
 self.smart_wallets: Dict[str,float] = {}
 self.token_wallets: Dict[str,set] = defaultdict(set)
 self.kol_wallets: Dict[str,str] = {
-‘5tzFkiKscfRcs9HpTTBTWH4xhKmMnmRMYbEbpJnmkLET’: ‘ansem’,
-‘7WQDnydFJUqFjGmRfBqbPXiJQ9N4JmTX7EGRj9LqkbFU’: ‘cobie’,
-‘3NTnQbdCpxkTzGBMvGybhyGnqwGvmKqDTRUGJQFmhcCB’: ‘hsaka’,
-‘GUfCR9mK6azb9vcpsxgXyj7XRPAKJd4KMHTTVvtncGgp’: ‘blknoiz’,
-‘DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh’: ‘beanie’,
-‘CUPSEYqBDDJHqKhXFsZhgaJECQZajjXEUcwEKKHSHdHu’: ‘cupsey’,
-‘4q2wPZMys1zCoAVpNTCqFQKBGoLjSRuHsCRkfmJhLCEH’: ‘degenspartan’,
-‘BRpsJtFxRxNSBST5V3RQjp5xcTSBuCzMRe5TxCCQbVTG’: ‘ledgerstatus’,
-‘Ez6zFMR7bwm4bBFLTmWXeWCRLQaGRsqVxGbFVXjjjmj4’: ‘crypto_bitlord’,
-‘9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM’: ‘inversebrah’,
+'5tzFkiKscfRcs9HpTTBTWH4xhKmMnmRMYbEbpJnmkLET': 'ansem',
+'7WQDnydFJUqFjGmRfBqbPXiJQ9N4JmTX7EGRj9LqkbFU': 'cobie',
+'3NTnQbdCpxkTzGBMvGybhyGnqwGvmKqDTRUGJQFmhcCB': 'hsaka',
+'GUfCR9mK6azb9vcpsxgXyj7XRPAKJd4KMHTTVvtncGgp': 'blknoiz',
+'DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh': 'beanie',
+'CUPSEYqBDDJHqKhXFsZhgaJECQZajjXEUcwEKKHSHdHu': 'cupsey',
+'4q2wPZMys1zCoAVpNTCqFQKBGoLjSRuHsCRkfmJhLCEH': 'degenspartan',
+'BRpsJtFxRxNSBST5V3RQjp5xcTSBuCzMRe5TxCCQbVTG': 'ledgerstatus',
+'Ez6zFMR7bwm4bBFLTmWXeWCRLQaGRsqVxGbFVXjjjmj4': 'crypto_bitlord',
+'9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM': 'inversebrah',
 }
 self.wallet_buy_times: Dict[str,List] = defaultdict(list)
 self.coordinated_buys: Dict[str,int] = defaultdict(int)
@@ -438,20 +438,20 @@ def check_exit(trade: Trade, snap: Snap, st: State):
 p = snap.price
 pnl = (p - trade.entry) / trade.entry
 if p > trade.peak: trade.peak = p
-tp = TRADE_TP.get(trade.addr, (CFG[‘take_profit_t1’],CFG[‘take_profit_t2’],CFG[‘take_profit_t3’],CFG[‘stop_loss’]))
+tp = TRADE_TP.get(trade.addr, (CFG['take_profit_t1'],CFG['take_profit_t2'],CFG['take_profit_t3'],CFG['stop_loss']))
 tp1,tp2,tp3,sl = tp
-if not trade.t1_hit and pnl >= tp1: return ‘TP_T1’
-if trade.t1_hit and not trade.t2_hit and pnl >= tp2: return ‘TP_T2’
-if trade.t2_hit and pnl >= tp3: return ‘TP_T3’
-if pnl <= -sl: return ‘STOP_LOSS’
+if not trade.t1_hit and pnl >= tp1: return 'TP_T1'
+if trade.t1_hit and not trade.t2_hit and pnl >= tp2: return 'TP_T2'
+if trade.t2_hit and pnl >= tp3: return 'TP_T3'
+if pnl <= -sl: return 'STOP_LOSS'
 if trade.t1_hit and trade.peak > trade.entry*(1+tp1):
-if p <= trade.peak*(1-CFG[‘trailing_stop’]): return ‘TRAIL_STOP’
+if p <= trade.peak*(1-CFG['trailing_stop']): return 'TRAIL_STOP'
 elapsed = time.time() - trade.t_open
-if elapsed > CFG[‘timeout_secs’] and abs(pnl) < CFG[‘min_move_pct’]: return ‘TIMEOUT’
+if elapsed > CFG['timeout_secs'] and abs(pnl) < CFG['min_move_pct']: return 'TIMEOUT'
 liqs = list(st.liqs[snap.addr])
-if len(liqs) >= 3 and liqs[0] and (liqs[-1]-liqs[0])/liqs[0] < CFG[‘liq_pull_pct’]: return ‘LIQ_PULL’
-if snap.buy_ratio < CFG[‘sell_pressure_max’] and snap.tx5m > 8: return ‘SELL_SPIKE’
-if snap.vol5m < 50 and elapsed > 20: return ‘VOL_COLLAPSE’
+if len(liqs) >= 3 and liqs[0] and (liqs[-1]-liqs[0])/liqs[0] < CFG['liq_pull_pct']: return 'LIQ_PULL'
+if snap.buy_ratio < CFG['sell_pressure_max'] and snap.tx5m > 8: return 'SELL_SPIKE'
+if snap.vol5m < 50 and elapsed > 20: return 'VOL_COLLAPSE'
 return None
 
 JUDGMENT_CACHE: Dict[str,tuple] = {}
@@ -505,10 +505,10 @@ One question: will {snap.symbol} go UP in the next 30 seconds?
 
 Age: {snap.age_min:.1f}min | Liq: ${snap.liq:,.0f} | Vol5m: ${snap.vol5m:,.0f}
 Buy%: {snap.buy_ratio*100:.0f}% | TX5m: {snap.tx5m} | Price: {price_trend}
-KOLs: {kols_in or ‘none’} | Score: {score:.0f} | Narrative: {signals.get(‘narrative’) or ‘none’}
+KOLs: {kols_in or 'none'} | Score: {score:.0f} | Narrative: {signals.get('narrative') or 'none'}
 
-Reply ONLY with JSON: {{“trade”:true/false,“confidence”:0.0-1.0,“boost”:-20 to 30,“reason”:“brief”,“action”:“BUY/SKIP”}}
-Rules: new+vol=BUY, KOL=always BUY, liq dropping=SKIP, be aggressive’’’
+Reply ONLY with JSON: {{"trade":true/false,"confidence":0.0-1.0,"boost":-20 to 30,"reason":"brief","action":"BUY/SKIP"}}
+Rules: new+vol=BUY, KOL=always BUY, liq dropping=SKIP, be aggressive'''
 
 ```
 try:
@@ -622,25 +622,25 @@ return None
 ```
 
 def parse_pair(pair, boosted, seen):
-if pair.get(‘chainId’) != ‘solana’: return None
-base = pair.get(‘baseToken’,{})
-addr = base.get(‘address’,’’)
+if pair.get('chainId') != 'solana': return None
+base = pair.get('baseToken',{})
+addr = base.get('address','')
 if not addr or addr in seen: return None
 seen.add(addr)
 try:
-liq = float(pair.get(‘liquidity’,{}).get(‘usd’,0) or 0)
-vol5m = float(pair.get(‘volume’,{}).get(‘m5’,0) or 0)
-vol1h = float(pair.get(‘volume’,{}).get(‘h1’,0) or 0)
-price = float(pair.get(‘priceUsd’,0) or 0)
-mc = float(pair.get(‘marketCap’,0) or 0)
-tx5m = pair.get(‘txns’,{}).get(‘m5’,{})
-buys = int(tx5m.get(‘buys’,0) or 0)
-sells = int(tx5m.get(‘sells’,0) or 0)
-created = pair.get(‘pairCreatedAt’,0) or 0
+liq = float(pair.get('liquidity',{}).get('usd',0) or 0)
+vol5m = float(pair.get('volume',{}).get('m5',0) or 0)
+vol1h = float(pair.get('volume',{}).get('h1',0) or 0)
+price = float(pair.get('priceUsd',0) or 0)
+mc = float(pair.get('marketCap',0) or 0)
+tx5m = pair.get('txns',{}).get('m5',{})
+buys = int(tx5m.get('buys',0) or 0)
+sells = int(tx5m.get('sells',0) or 0)
+created = pair.get('pairCreatedAt',0) or 0
 age = (time.time()*1000 - created)/60000 if created else 999
-if price <= 0 or liq < CFG[‘min_liquidity’]: return None
-narr, narr_kw = has_narrative(base.get(‘symbol’,’’), base.get(‘name’,’’))
-snap = Snap(addr=addr, symbol=base.get(‘symbol’,’???’),
+if price <= 0 or liq < CFG['min_liquidity']: return None
+narr, narr_kw = has_narrative(base.get('symbol',''), base.get('name',''))
+snap = Snap(addr=addr, symbol=base.get('symbol','???'),
 price=price, liq=liq, vol5m=vol5m, vol1h=vol1h,
 buys5m=buys, sells5m=sells, age_min=age, mc=mc,
 _boosted=addr in boosted, _narrative=narr, _narrative_kw=narr_kw)
@@ -690,7 +690,7 @@ return new_snaps[:200] + other_snaps[:50]
 ```
 
 async def scanner_task(session, queue, st):
-log.info(’ 🔍 Scanner started’)
+log.info(' 🔍 Scanner started')
 tick = 0
 while True:
 tick += 1
@@ -703,11 +703,11 @@ st.vols [snap.addr].append(snap.vol5m)
 st.liqs [snap.addr].append(snap.liq)
 st.txs [snap.addr].append(snap.tx5m)
 await queue.put(snap)
-log.info(f’ 🔍 Fetched {len(snaps)} pairs | queue={queue.qsize()}’)
+log.info(f' 🔍 Fetched {len(snaps)} pairs | queue={queue.qsize()}')
 else:
-log.warning(’ 🔍 No pairs returned – API may be slow’)
+log.warning(' 🔍 No pairs returned – API may be slow')
 except Exception as e:
-log.warning(f’ 🔍 Scanner error: {e}’)
+log.warning(f' 🔍 Scanner error: {e}')
 
 ```
 if tick % 20 == 0:
@@ -717,19 +717,19 @@ await asyncio.sleep(CFG['scan_interval'])
 ```
 
 async def _kol_scan(session, st):
-api_key = RPC_URL.split(‘api-key=’)[-1] if ‘api-key=’ in RPC_URL else ‘’
+api_key = RPC_URL.split('api-key=')[-1] if 'api-key=' in RPC_URL else ''
 if not api_key: return
 async def check(w):
 try:
-url = f’https://api.helius.xyz/v0/addresses/{w}/transactions’
-async with session.get(url, params={‘api-key’:api_key,‘limit’:‘5’,‘type’:‘SWAP’},
+url = f'https://api.helius.xyz/v0/addresses/{w}/transactions'
+async with session.get(url, params={'api-key':api_key,'limit':'5','type':'SWAP'},
 timeout=aiohttp.ClientTimeout(total=3)) as r:
 if r.status != 200: return
 txs = await r.json()
 if not txs or not isinstance(txs, list): return
 for tx in txs:
-for t in tx.get(‘events’,{}).get(‘swap’,{}).get(‘tokenOutputs’,[]):
-mint = t.get(‘mint’,’’)
+for t in tx.get('events',{}).get('swap',{}).get('tokenOutputs',[]):
+mint = t.get('mint','')
 if mint and mint != WSOL_MINT:
 st.token_wallets[mint].add(w)
 st.coordinated_buys[mint] = len(st.token_wallets[mint] & st.kol_wallets.keys())
@@ -737,8 +737,8 @@ except: pass
 await asyncio.gather(*[check(w) for w in list(st.kol_wallets.keys())])
 
 async def decision_task(queue, st, executor=None, groq_session=None, wallet=None):
-log.info(’ ⚡ Decision engine started’)
-slippage = CFG[‘slippage’]
+log.info(' ⚡ Decision engine started')
+slippage = CFG['slippage']
 while True:
 snap: Snap = await queue.get()
 try:
@@ -808,8 +808,8 @@ queue.task_done()
 ```
 
 async def exit_task(queue, st, executor=None):
-log.info(’ 🛡 Exit watcher started’)
-slippage = CFG[‘slippage’]
+log.info(' 🛡 Exit watcher started')
+slippage = CFG['slippage']
 snap_cache: Dict[str,Snap] = {}
 
 ```
@@ -855,7 +855,7 @@ f"held={held}s {emoji}")
 ```
 
 async def status_task(st, wallet=None, session=None):
-log.info(’ 📊 Status task started’)
+log.info(' 📊 Status task started')
 await asyncio.sleep(2)
 tick = 0
 last_report = time.time()
@@ -984,5 +984,5 @@ print(f" Trades : {s['n']} | WR={s['wr']*100:.0f}% | PnL=${s['pnl']:+.4f}")
 print('='*56)
 ```
 
-if **name** == ‘**main**’:
+if **name** == '**main**':
 asyncio.run(main())
