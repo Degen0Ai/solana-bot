@@ -29,7 +29,7 @@ SOLDERS_OK = False
 Keypair = None
 Pubkey = None
 
-LIVE_MODE = os.getenv(‘LIVE_MODE’, ‘false’).lower() == ‘true’
+LIVE_MODE = os.getenv('LIVE_MODE', 'false').lower() == 'true'
 RPC_URL = os.getenv(‘HELIUS_RPC_URL’, ‘https://api.mainnet-beta.solana.com’)
 WALLET_KEY = os.getenv(‘WALLET_PRIVATE_KEY’, ‘’)
 GROQ_API_KEY = os.getenv(‘GROQ_API_KEY’, ‘’)
