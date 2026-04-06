@@ -15,10 +15,10 @@ from typing import Dict, List, Optional, Tuple
 from collections import deque, defaultdict
 
 try:
-from dotenv import load_dotenv
-load_dotenv()
+    from dotenv import load_dotenv
+    load_dotenv()
 except ImportError:
-pass
+    pass
 
 try:
 from solders.keypair import Keypair
