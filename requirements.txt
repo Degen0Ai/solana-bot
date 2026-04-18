@@ -1,5 +1,3 @@
 aiohttp
 cryptography
 base58
-python-dotenv
-solders
